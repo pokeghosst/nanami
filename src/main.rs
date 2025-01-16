@@ -114,7 +114,7 @@ fn parse_document(input: &str) -> IResult<&str, Document> {
     Ok((input, Document { title, content }))
 }
 
-fn render(doc: &Document) -> Result<String, std::io::Error> {
+fn render(doc: &Document) -> String {
     let mut html = String::new();
 
     html.push_str(HEADER_BEGIN_HTML5);
@@ -122,21 +122,34 @@ fn render(doc: &Document) -> Result<String, std::io::Error> {
     html.push_str(doc.title);
     html.push_str(TITLE_END);
     html.push_str(HEADER_END);
+
     html.push_str(BODY_BEGIN);
+
+    for case in &doc.content.cases {
+        html.push_str("        <div class=\"case\">\n");
+        html.push_str("            <h4 id=\"");
+        html.push_str(case.name);
+        html.push_str("\">");
+        html.push_str(case.name);
+        html.push_str("</h4>\n");
+        for text in &case.texts {
+            html.push_str("            <div class=\"text-block\">\n");
+            html.push_str("                <p>");
+            html.push_str(text.trim());
+            html.push_str("</p>\n");
+            html.push_str("            </div>\n");
+        }
+        html.push_str("        </div>\n");
+    }
     html.push_str(BODY_END);
 
-    Ok(html)
+    html
 }
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contents = fs::read_to_string("./sample.nama")?;
-    // print!("{}", render().unwrap());
     match parse_document(&contents) {
         Ok((_remaining, doc)) => {
-            println!("{}", doc.title);
-            println!("{}", doc.content.cases[0].name);
-            println!("{}", doc.content.cases[0].texts[0].trim());
-            // println!("Text: {}", doc.content);
-            // println!("{}", render(&doc).unwrap());
+            println!("{}", render(&doc));
         }
         Err(e) => println!("Parsing error: {}", e),
     }
