@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+use clap::{ArgGroup, Args, Parser, ValueEnum};
 use nom::{
     bytes::complete::{tag, take_until},
     character::complete::{char, line_ending, multispace0, not_line_ending, tab},
@@ -22,7 +23,7 @@ use nom::{
     sequence::{delimited, preceded, tuple},
     IResult,
 };
-use std::fs;
+use std::{fs, path::PathBuf};
 
 const HEADER_BEGIN_HTML5: &str = "<!DOCTYPE html>
 <html lang=\"en\">
@@ -52,6 +53,27 @@ struct Content<'a> {
 struct Case<'a> {
     name: &'a str,
     texts: Vec<&'a str>,
+}
+
+#[derive(Parser, Debug)]
+#[command(version, about = "A Nano Markdown compiler", long_about = None)]
+struct Cli {
+    /// Output format
+    #[arg(value_enum)]
+    format: OutputFormat,
+    /// print out and write without the header or <body>
+    outpute: Option<String>,
+    /// takes template file and puts directory where {directory} is and content where {content} is
+    // template: Option<String>,
+    /// .nama files to process
+    #[arg(required = true, num_args = 1.., last = true)]
+    files: Vec<PathBuf>,
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+enum OutputFormat {
+    Html5,
+    Xhtml,
 }
 
 fn parse_title(input: &str) -> IResult<&str, &str> {
@@ -145,14 +167,18 @@ fn render(doc: &Document) -> String {
 
     html
 }
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let contents = fs::read_to_string("./sample.nama")?;
-    match parse_document(&contents) {
-        Ok((_remaining, doc)) => {
-            println!("{}", render(&doc));
-        }
-        Err(e) => println!("Parsing error: {}", e),
-    }
+fn main() {
+    let cli = Cli::parse();
 
-    Ok(())
+    println!("Selected format: {cli:?}");
+
+    // let contents = fs::read_to_string("./sample.nama")?;
+    // match parse_document(&contents) {
+    //     Ok((_remaining, doc)) => {
+    //         println!("{}", render(&doc));
+    //     }
+    //     Err(e) => println!("Parsing error: {}", e),
+    // }
+
+    // Ok(())
 }
