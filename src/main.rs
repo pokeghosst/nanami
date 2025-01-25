@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-use clap::{ArgGroup, Args, Parser, ValueEnum};
+use clap::{ArgGroup, Command, CommandFactory, Parser};
 use nom::{
     bytes::complete::{tag, take_until},
     character::complete::{char, line_ending, multispace0, not_line_ending, tab},
@@ -55,25 +55,63 @@ struct Case<'a> {
     texts: Vec<&'a str>,
 }
 
-#[derive(Parser, Debug)]
-#[command(version, about = "A Nano Markdown compiler", long_about = None)]
-struct Cli {
-    /// Output format
-    #[arg(value_enum)]
-    format: OutputFormat,
-    /// print out and write without the header or <body>
-    outpute: Option<String>,
-    /// takes template file and puts directory where {directory} is and content where {content} is
-    // template: Option<String>,
-    /// .nama files to process
-    #[arg(required = true, num_args = 1.., last = true)]
-    files: Vec<PathBuf>,
-}
+#[derive(Parser)]
+#[command(
+    name = "nanami",
+    version,
+    about = "Converts .nama markdown files to HTML5 or XHTML 1.0 Strict files and lists them in a 'directory.(x)html'.",
+    groups = [
+        ArgGroup::new("format")
+            .required(true)
+            .multiple(false)
+            .args(["html5", "xhtml"]),
+    ]
+)]
+struct Args {
+    /// List of .nama files to process
+    #[arg(required = true)]
+    files: Vec<String>,
 
-#[derive(Debug, Clone, ValueEnum)]
-enum OutputFormat {
-    Html5,
-    Xhtml,
+    #[arg(
+        long = "manual-directory",
+        alias = "manual_directory",
+        help = "Resets the directory.html according to the compiled files in argument order."
+    )]
+    manual_directory: bool,
+
+    #[arg(
+        long = "append-directory",
+        alias = "append_directory",
+        help = "Appends to an existing directory.html."
+    )]
+    append_directory: bool,
+
+    #[arg(
+        long = "alphabetize-directory",
+        alias = "alphabetize_directory",
+        help = "Alphabetizes an existing or new directory.html."
+    )]
+    alphabetize_directory: bool,
+
+    #[arg(long, conflicts_with = "xhtml", help = "Set output format to HTML5.")]
+    html5: bool,
+
+    #[arg(
+        long,
+        conflicts_with = "html5",
+        help = "Set output format to XHTML 1.0 Strict."
+    )]
+    xhtml: bool,
+
+    #[arg(long, help = "Write output without header or <body> tags.")]
+    outpute: bool,
+
+    #[arg(
+        long,
+        value_name = "TEMPLATE",
+        help = "Use template file with {directory} and {content} placeholders."
+    )]
+    template: Option<String>,
 }
 
 fn parse_title(input: &str) -> IResult<&str, &str> {
@@ -168,9 +206,15 @@ fn render(doc: &Document) -> String {
     html
 }
 fn main() {
-    let cli = Cli::parse();
-
-    println!("Selected format: {cli:?}");
+    let args = match Args::try_parse() {
+        Ok(args) => args,
+        Err(e) => {
+            // Print user-friendly help instead of technical error
+            let mut cmd = Args::command();
+            cmd.print_help().unwrap();
+            std::process::exit(1);
+        }
+    };
 
     // let contents = fs::read_to_string("./sample.nama")?;
     // match parse_document(&contents) {
