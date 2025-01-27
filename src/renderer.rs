@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::fs;
 
-use crate::models::Document;
+use crate::models::{Case, Document};
 
 const HEADER_BEGIN_HTML5: &str =
     "<!DOCTYPE html>\n<html lang=\"en\">\n    <head>\n        <meta charset=\"UTF-8\">\n";
@@ -47,6 +47,16 @@ fn build_file(doc: &Document, xhtml: bool) -> String {
 
     html.push_str(BODY_BEGIN);
 
+    html.push_str(&build_body(doc));
+
+    html.push_str(BODY_END);
+
+    html
+}
+
+fn build_body(doc: &Document) -> String {
+    let mut html = String::new();
+
     for case in doc.content().cases() {
         html.push_str("        <div class=\"case\">\n");
         html.push_str("            <h4 id=\"");
@@ -63,13 +73,20 @@ fn build_file(doc: &Document, xhtml: bool) -> String {
         }
         html.push_str("        </div>\n");
     }
-    html.push_str(BODY_END);
 
     html
 }
 
-pub fn render(doc: &Document, filename: &str, xhtml: bool) {
-    let file = build_file(doc, xhtml);
+pub fn render(doc: &Document, filename: &str, xhtml: bool, outpute: bool) {
+    let file = if outpute {
+        build_body(doc)
+    } else {
+        build_file(doc, xhtml)
+    };
+
+    if outpute {
+        println!("{}", &file)
+    }
 
     let _ = fs::write(
         filename.to_owned() + if xhtml { ".xhtml" } else { ".html" },

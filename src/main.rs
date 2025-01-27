@@ -96,6 +96,7 @@ fn main() {
                         &doc,
                         &filename.split(".").collect::<Vec<_>>()[0],
                         args.xhtml,
+                        args.outpute,
                     ),
                     Err(e) => println!("Parsing error: {}", e),
                 }
