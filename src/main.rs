@@ -15,9 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-use clap::{ArgGroup, Command, CommandFactory, Parser};
-
-use std::{fs, path::PathBuf};
+use crate::parser::parse_document;
+use clap::{ArgGroup, Parser};
+use std::fs;
 
 pub mod models;
 pub mod parser;
@@ -28,35 +28,28 @@ pub mod renderer;
     name = "nanami",
     version,
     about = "Converts .nama markdown files to HTML5 or XHTML 1.0 Strict files and lists them in a 'directory.(x)html'.",
+    arg_required_else_help = true,
     groups = [
         ArgGroup::new("format")
             .required(true)
-            .multiple(false)
             .args(["html5", "xhtml"]),
     ]
 )]
 struct Args {
-    /// List of .nama files to process
-    #[arg(required = true)]
-    files: Vec<String>,
-
     #[arg(
         long = "manual-directory",
-        alias = "manual_directory",
         help = "Resets the directory.html according to the compiled files in argument order."
     )]
     manual_directory: bool,
 
     #[arg(
         long = "append-directory",
-        alias = "append_directory",
         help = "Appends to an existing directory.html."
     )]
     append_directory: bool,
 
     #[arg(
         long = "alphabetize-directory",
-        alias = "alphabetize_directory",
         help = "Alphabetizes an existing or new directory.html."
     )]
     alphabetize_directory: bool,
@@ -71,6 +64,13 @@ struct Args {
     )]
     xhtml: bool,
 
+    #[arg(
+        long,
+        value_name = "STYLESHEETS",
+        help = "CSS stylesheets(s) to include."
+    )]
+    style: Vec<String>,
+
     #[arg(long, help = "Write output without header or <body> tags.")]
     outpute: bool,
 
@@ -80,26 +80,29 @@ struct Args {
         help = "Use template file with {directory} and {content} placeholders."
     )]
     template: Option<String>,
+
+    /// List of .nama files to process
+    #[arg(required = true)]
+    files: Vec<String>,
 }
 
 fn main() {
-    let args = match Args::try_parse() {
-        Ok(args) => args,
+    match Args::try_parse() {
+        Ok(args) => {
+            for filename in args.files {
+                let file = fs::read_to_string(&filename).unwrap();
+                match parse_document(&file) {
+                    Ok((_remaining, doc)) => renderer::render(
+                        &doc,
+                        &filename.split(".").collect::<Vec<_>>()[0],
+                        args.xhtml,
+                    ),
+                    Err(e) => println!("Parsing error: {}", e),
+                }
+            }
+        }
         Err(e) => {
-            // Print user-friendly help instead of technical error
-            let mut cmd = Args::command();
-            cmd.print_help().unwrap();
-            std::process::exit(1);
+            eprintln!("{}", e);
         }
     };
-
-    // let contents = fs::read_to_string("./sample.nama")?;
-    // match parse_document(&contents) {
-    //     Ok((_remaining, doc)) => {
-    //         println!("{}", render(&doc));
-    //     }
-    //     Err(e) => println!("Parsing error: {}", e),
-    // }
-
-    // Ok(())
 }
