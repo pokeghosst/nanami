@@ -15,13 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-use crate::parser::parse_document;
 use clap::{ArgGroup, Parser};
+use nanami::{parser::parse_document, renderer::render};
 use std::fs;
-
-pub mod models;
-pub mod parser;
-pub mod renderer;
 
 #[derive(Parser)]
 #[command(
@@ -92,7 +88,7 @@ fn main() {
             for filename in args.files {
                 let file = fs::read_to_string(&filename).unwrap();
                 match parse_document(&file) {
-                    Ok((_remaining, doc)) => renderer::render(
+                    Ok((_remaining, doc)) => render(
                         &doc,
                         &filename.split(".").collect::<Vec<_>>()[0],
                         args.xhtml,
