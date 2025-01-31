@@ -46,12 +46,37 @@ RSpec.describe Nanami do
   describe 'case' do
     it 'can parse well-formed case block' do
       input = "case(hello) {
-			text {
-				I exist!
-			}
+			  text {
+				  I exist!
+			  }
 		  }"
-      # expect(parser.case_statement).to parse(input)
-      parser.case_statement.parse_with_debug(input)
+      expect(parser.case_statement).to parse(input)
+      result = parser.case_statement.parse(input)
+      expect(result[:case_name].to_s.strip).to eq('hello')
+      expect(result[:case_body][:text].to_s.strip).to eq('I exist!')
+    end
+
+    it 'can parse minified case block' do
+      input = 'case(hello){text{I exist!}}'
+      expect(parser.case_statement).to parse(input)
+      result = parser.case_statement.parse(input)
+      expect(result[:case_name].to_s.strip).to eq('hello')
+      expect(result[:case_body][:text].to_s.strip).to eq('I exist!')
+    end
+
+    it 'can parse recursive case blocks' do
+      input = "case(hello) {
+        case(world) {
+          text {
+            I exist!
+          }
+        }
+      }"
+      expect(parser.case_statement).to parse(input)
+      result = parser.case_statement.parse(input)
+      expect(result[:case_name].to_s.strip).to eq('hello')
+      expect(result[:case_body][:case_name].to_s.strip).to eq('world')
+      expect(result[:case_body][:case_body][:text].to_s.strip).to eq('I exist!')
     end
   end
 end
