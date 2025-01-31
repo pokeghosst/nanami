@@ -79,4 +79,39 @@ RSpec.describe Nanami do
       expect(result[:case_body][:case_body][:text].to_s.strip).to eq('I exist!')
     end
   end
+
+  describe 'content' do
+    it 'can parse well-formed content block' do
+      input = "content {
+		    case(hello) {
+			    text {
+				    I exist!
+			    }
+		    }
+	    }"
+      expect(parser.content).to parse(input)
+      result = parser.content.parse(input)
+      expect(result[:content][:case_name].to_s.strip).to eq('hello')
+      expect(result[:content][:case_body][:text].to_s.strip).to eq('I exist!')
+    end
+
+    describe 'parser' do
+      it 'can parse well-formed document' do
+        input = "title: first test
+	                content {
+		                case(hello) {
+			                text {
+				                I exist!
+                      }
+                    }
+                  }"
+        expect(parser).to parse input
+        result = parser.parse input
+        expect(result[:title].to_s.strip).to eq('first test')
+        expect(result[:content][:content][:case_name].to_s.strip).to eq('hello')
+        expect(result[:content][:content][:case_body][:text].to_s.strip).to eq('I exist!')
+      end
+    end
+
+  end
 end

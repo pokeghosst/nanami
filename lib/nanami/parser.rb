@@ -45,9 +45,16 @@ module Nanami
         space? >> rbrace
     end
 
-    # rule(:content) { str('content') >> space? >> str('{') >> newline | space? >>  case_block.as(:content) >> newline | space? >> str('}') }
+    rule(:content) do
+      str('content') >> space? >> lbrace >> space? >>
+        case_statement.as(:content) >> space? >>
+        rbrace
+    end
 
-    rule(:document) { space? >> title }
+    rule(:document) do
+      space? >> title >>
+        space? >> content.as(:content)
+    end
 
     root(:document)
   end
