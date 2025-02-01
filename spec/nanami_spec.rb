@@ -32,6 +32,15 @@ RSpec.describe Nanami do
     end
   end
 
+  describe 'in-text elements' do
+    it 'can parse references' do
+      input = '${smith2010}'
+      expect(parser.ref).to parse(input)
+      result = parser.ref.parse(input)
+      expect(result[:ref].to_s.strip).to eq('smith2010')
+    end
+  end
+
   describe 'text' do
     it 'can parse well-formed text block' do
       input = "text {
@@ -112,6 +121,5 @@ RSpec.describe Nanami do
         expect(result[:content][:content][:case_body][:text].to_s.strip).to eq('I exist!')
       end
     end
-
   end
 end

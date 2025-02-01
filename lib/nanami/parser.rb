@@ -31,6 +31,12 @@ module Nanami
       str('title:') >> space? >> (newline.absent? >> any).repeat(1).as(:title) >> newline
     end
 
+    rule(:ref) do
+      str('$') >> lbrace >>
+        match['a-zA-Z0-9_'].repeat(1).as(:ref) >>
+        rbrace
+    end
+
     rule(:text_block) do
       str('text') >> space? >> lbrace >> space? >>
         (str('}').absent? >> any).repeat(1).as(:text) >>
