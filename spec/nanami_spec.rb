@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'parslet/rig/rspec'
+require 'parslet/convenience'
 
 RSpec.describe Nanami do
   let(:parser) { Nanami::Parser.new }
@@ -48,7 +49,7 @@ RSpec.describe Nanami do
 			}"
       expect(parser.text_block).to parse(input)
       result = parser.text_block.parse(input)
-      expect(result[:text].to_s.strip).to eq('I exist!')
+      expect(result[:text].first[:plain].to_s.strip).to eq('I exist!')
     end
   end
 
@@ -62,7 +63,7 @@ RSpec.describe Nanami do
       expect(parser.case_statement).to parse(input)
       result = parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
-      expect(result[:case_body][:text].to_s.strip).to eq('I exist!')
+      expect(result[:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
     it 'can parse minified case block' do
@@ -70,7 +71,7 @@ RSpec.describe Nanami do
       expect(parser.case_statement).to parse(input)
       result = parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
-      expect(result[:case_body][:text].to_s.strip).to eq('I exist!')
+      expect(result[:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
     it 'can parse recursive case blocks' do
@@ -85,7 +86,7 @@ RSpec.describe Nanami do
       result = parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
       expect(result[:case_body][:case_name].to_s.strip).to eq('world')
-      expect(result[:case_body][:case_body][:text].to_s.strip).to eq('I exist!')
+      expect(result[:case_body][:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
     end
   end
 
@@ -101,7 +102,7 @@ RSpec.describe Nanami do
       expect(parser.content).to parse(input)
       result = parser.content.parse(input)
       expect(result[:content][:case_name].to_s.strip).to eq('hello')
-      expect(result[:content][:case_body][:text].to_s.strip).to eq('I exist!')
+      expect(result[:content][:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
     describe 'parser' do
@@ -118,7 +119,7 @@ RSpec.describe Nanami do
         result = parser.parse input
         expect(result[:title].to_s.strip).to eq('first test')
         expect(result[:content][:content][:case_name].to_s.strip).to eq('hello')
-        expect(result[:content][:content][:case_body][:text].to_s.strip).to eq('I exist!')
+        expect(result[:content][:content][:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
       end
     end
   end

@@ -17,7 +17,6 @@
 # frozen_string_literal: true
 
 require 'parslet'
-require 'parslet/convenience'
 
 module Nanami
   class Parser < Parslet::Parser
@@ -31,15 +30,75 @@ module Nanami
       str('title:') >> space? >> (newline.absent? >> any).repeat(1).as(:title) >> newline
     end
 
+    # ${ref}
     rule(:ref) do
       str('$') >> lbrace >>
         match['a-zA-Z0-9_'].repeat(1).as(:ref) >>
         rbrace
     end
 
+    rule(:html_attribute_value) { str('"') >> (str('"').absent? >> any).repeat >> str('"') }
+
+    rule(:html_attribute) { match['a-zA-Z'].repeat(1) >> (str('=') >> html_attribute_value).maybe }
+
+    rule(:html_tag) do
+      str('<') >>
+        str('/').maybe >>
+        match['a-zA-Z'].repeat(1).as(:tag_name) >>
+        (space >> html_attribute).repeat.as(:attributes) >>
+        space? >>
+        str('>')
+    end
+
+    rule(:self_closing_tag) do
+      str('<') >>
+        match['a-zA-Z'].repeat(1).as(:tag_name) >>
+        (space >> html_attribute).repeat.as(:attributes) >>
+        space? >>
+        str('/>')
+    end
+
+    rule(:url_char) do
+      match['a-zA-Z0-9\-._~:/?#\[\]@!$&\'()*+,;=']
+    end
+
+    rule(:path_char) {
+      match['a-zA-Z0-9\-._/']
+    }
+
+    # {url}{text}
+    rule(:link) do
+      lbrace >>
+        url_char.repeat(1).as(:url) >>
+        rbrace >> lbrace >>
+        (lbrace.absent? >> rbrace.absent? >> any).repeat(1).as(:link_text) >>
+        rbrace
+    end
+
+    # {path.ff}{description}
+    rule(:image) do
+      lbrace >>
+        path_char.repeat(1).as(:img_path) >>
+        rbrace >> lbrace >>
+        (lbrace.absent? >> rbrace.absent? >> any).repeat(1).as(:img_desc) >>
+        rbrace
+    end
+
+    rule(:text_content) do
+      (
+        ref.as(:ref) |
+        image.as(:img) |
+        link.as(:link) |
+        self_closing_tag.as(:self_closing) |
+        html_tag.as(:html) |
+        (ref.absent? >> image.absent? >> link.absent? >>
+          html_tag.absent? >> self_closing_tag.absent? >> str('}').absent? >> any).repeat(1).as(:plain)
+      ).repeat(1)
+    end
+
     rule(:text_block) do
       str('text') >> space? >> lbrace >> space? >>
-        (str('}').absent? >> any).repeat(1).as(:text) >>
+        text_content.as(:text) >>
         space? >> rbrace
     end
 
