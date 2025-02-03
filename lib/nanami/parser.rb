@@ -105,7 +105,13 @@ module Nanami
     rule(:case_statement) do
       str('case(') >>
         (str(')').absent? >> any).repeat(1).as(:case_name) >>
-        str(')') >> space? >> lbrace >> space? >>
+        str(')') >>
+        (
+          str('(') >>
+            url_char.repeat(1).as(:case_url) >>
+            str(')')
+        ).maybe >>
+        space? >> lbrace >> space? >>
         (text_block | case_statement).as(:case_body) >>
         space? >> rbrace
     end

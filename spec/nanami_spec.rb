@@ -88,6 +88,13 @@ RSpec.describe Nanami do
       expect(result[:case_body][:case_name].to_s.strip).to eq('world')
       expect(result[:case_body][:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
     end
+
+    it 'can parse case with link' do
+      input = 'case(hello)(https://example.com){text{I exist!}}'
+      expect(parser.case_statement).to parse(input)
+      result = parser.case_statement.parse(input)
+      expect(result[:case_url].to_s.strip).to eq('https://example.com')
+    end
   end
 
   describe 'content' do
