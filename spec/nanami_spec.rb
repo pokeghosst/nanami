@@ -1,3 +1,19 @@
+# nanami -- Nano Markdown compiler
+# Copyright (C) 2025 pokeghost
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 # frozen_string_literal: true
 
 require 'parslet/rig/rspec'
@@ -50,6 +66,31 @@ RSpec.describe Nanami do
       expect(parser.text_block).to parse(input)
       result = parser.text_block.parse(input)
       expect(result[:text].first[:plain].to_s.strip).to eq('I exist!')
+    end
+
+    it 'can parse complicated texts' do
+      input = %(text {
+                        <div class="container">
+                          As per ${Jones2012}...
+                          <custom-element data-test="value">
+                            Check out {https://example.com/path?q=1}{our website}
+                            <br/>
+                            <img-v2 src="test.jpg"/>
+                          </custom-element>
+                          Here's an image: {assets/images/test.ff}{A test image}
+                        </div>
+                      })
+      result = parser.text_block.parse(input)
+      print result
+    end
+  end
+
+  describe 'sources' do
+    it 'can parse well-formed sources' do
+      input = "sources {
+							    {footnotes}
+					      }"
+      expect(parser.sources).to parse(input)
     end
   end
 

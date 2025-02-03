@@ -59,12 +59,12 @@ module Nanami
     end
 
     rule(:url_char) do
-      match['a-zA-Z0-9\-._~:/?#\[\]@!$&\'()*+,;=']
+      match['a-zA-Z0-9\-._~:/?#\[\]@!$&\'*+,;=']
     end
 
-    rule(:path_char) {
+    rule(:path_char) do
       match['a-zA-Z0-9\-._/']
-    }
+    end
 
     # {url}{text}
     rule(:link) do
@@ -87,12 +87,12 @@ module Nanami
     rule(:text_content) do
       (
         ref.as(:ref) |
-        image.as(:img) |
-        link.as(:link) |
-        self_closing_tag.as(:self_closing) |
-        html_tag.as(:html) |
-        (ref.absent? >> image.absent? >> link.absent? >>
-          html_tag.absent? >> self_closing_tag.absent? >> str('}').absent? >> any).repeat(1).as(:plain)
+          image.as(:img) |
+          link.as(:link) |
+          self_closing_tag.as(:self_closing) |
+          html_tag.as(:html) |
+          (ref.absent? >> image.absent? >> link.absent? >>
+            html_tag.absent? >> self_closing_tag.absent? >> str('}').absent? >> any).repeat(1).as(:plain)
       ).repeat(1)
     end
 
@@ -100,6 +100,12 @@ module Nanami
       str('text') >> space? >> lbrace >> space? >>
         text_content.as(:text) >>
         space? >> rbrace
+    end
+
+    rule(:sources) do
+      str('sources') >> space? >> lbrace >> space? >>
+        (str('{footnotes}').as(:footnotes) >> space?).maybe >>
+        rbrace
     end
 
     rule(:case_statement) do
