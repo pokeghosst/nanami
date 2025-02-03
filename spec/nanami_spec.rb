@@ -136,6 +136,17 @@ RSpec.describe Nanami do
       result = parser.case_statement.parse(input)
       expect(result[:case_url].to_s.strip).to eq('https://example.com')
     end
+
+    it 'can parse case with sources' do
+      input = 'case(hello) {
+                  sources {
+                    {footnotes}
+                  }
+               }'
+      result = parser.case_statement.parse_with_debug(input)
+      # This will be transformed to boolean flag, for test it's fine to check existence
+      expect(result[:case_body].first[:footnotes].to_s.strip).to eq('{footnotes}')
+    end
   end
 
   describe 'content' do

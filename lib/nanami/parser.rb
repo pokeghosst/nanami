@@ -109,7 +109,7 @@ module Nanami
     end
 
     rule(:case_content) do
-      (text_block | case_statement)
+      (text_block | case_statement | sources)
     end
 
     rule(:case_statement) do
