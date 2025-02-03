@@ -109,7 +109,7 @@ module Nanami
     end
 
     rule(:case_content) do
-      (text_block | case_statement | sources)
+      space? >> (text_block | case_statement | sources)
     end
 
     rule(:case_statement) do
@@ -122,18 +122,21 @@ module Nanami
             str(')')
         ).maybe >>
         space? >> lbrace >> space? >>
-        case_content.repeat(0).as(:case_body) >>
+        case_content.repeat(1).as(:case_body) >>
         space? >> rbrace
     end
 
+    rule(:nlp) { str('!nlp') }
+
     rule(:content) do
-      str('content') >> space? >> lbrace >> space? >>
-        case_statement.as(:content) >> space? >>
+      space? >> str('content') >> space? >> lbrace >> space? >>
+        case_statement.repeat(0).as(:content) >> space? >>
         rbrace
     end
 
     rule(:document) do
       space? >> title >>
+        space? >> nlp.maybe >>
         space? >> content.as(:content)
     end
 

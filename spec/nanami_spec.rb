@@ -165,20 +165,29 @@ RSpec.describe Nanami do
     end
 
     describe 'parser' do
-      it 'can parse well-formed document' do
+      it 'can parse benchmark document' do
         input = "title: first test
-	                content {
-		                case(hello) {
-			                text {
-				                I exist!
-                      }
-                    }
-                  }"
+                 !nlp
+                 content {
+                     case(hello)(https://example.com) {
+                         text {
+                             <b>I exist!</b>${smthiread}${anthrthngiread}
+                             <br/>
+                             I use {https://example.com}{example} as an example a lot.
+                             {img/someimg.ff}{A random image in the farbfeld format}
+                         }
+                         sources {
+                             {footnotes}
+                         }
+                     }
+                 }"
+        parser.parse_with_debug input
         expect(parser).to parse input
         result = parser.parse input
+        print result
         expect(result[:title].to_s.strip).to eq('first test')
-        expect(result[:content][:content][:case_name].to_s.strip).to eq('hello')
-        expect(result[:content][:content][:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
+        expect(result[:content][:content].first[:case_name].to_s.strip).to eq('hello')
+        expect(result[:content][:content].first[:case_body].first[:text][1][:plain].to_s.strip).to eq('I exist!')
       end
     end
   end
