@@ -19,7 +19,8 @@
 require 'parslet'
 
 module Nanami
-  class Parser < Parslet::Parser
+  # Parses .nama files
+  class NamaParser < Parslet::Parser
     rule(:space) { match('\s').repeat(1) }
     rule(:space?) { space.maybe }
     rule(:newline) { match('\n') }
@@ -141,5 +142,34 @@ module Nanami
     end
 
     root(:document)
+  end
+
+  # Parses webography file
+  class WebographyParser < Parslet::Parser
+    rule(:space)      { match('\s').repeat(1) }
+    rule(:space?)     { space.maybe }
+    rule(:newline)    { match('\n') }
+    rule(:blank_line) { newline >> newline }
+
+    rule(:field_value) { (newline.absent? >> any).repeat(1) }
+
+    rule(:title)  { str('T: ') >> field_value.as(:title) }
+    rule(:link)   { str('L: ') >> field_value.as(:link)  }
+    rule(:name)   { str('N: ') >> field_value.as(:name)  }
+    rule(:date)   { str('D: ') >> field_value.as(:date)  }
+
+    rule(:source) do
+      (space? >> title >> newline >>
+        space? >> link >> newline >>
+        space? >> name >> newline >>
+        space? >> date >> space?)
+    end
+
+    rule(:webography) do
+      (source >> blank_line.maybe).repeat.as(:sources)
+    end
+
+    root(:webography)
+
   end
 end

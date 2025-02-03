@@ -17,7 +17,7 @@
 # frozen_string_literal: true
 
 require_relative 'nanami/version'
-require_relative 'nanami/parser'
+require_relative 'nanami/nama_parser'
 require_relative 'nanami/transformer'
 
 module Nanami

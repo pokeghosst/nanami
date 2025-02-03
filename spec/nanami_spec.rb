@@ -20,8 +20,9 @@ require 'parslet/rig/rspec'
 require 'parslet/convenience'
 
 RSpec.describe Nanami do
-  let(:parser) { Nanami::Parser.new }
-  let(:transformer) { Nanami::Transformer.new }
+  let(:nama_parser) { Nanami::NamaParser.new }
+  let(:nama_transformer) { Nanami::Transformer.new }
+  let(:webography_parser) { Nanami::WebographyParser.new }
 
   it 'has a version number' do
     expect(Nanami::VERSION).not_to be nil
@@ -30,30 +31,30 @@ RSpec.describe Nanami do
   describe 'title' do
     it 'can parse well-formed title' do
       input = "title: test\n"
-      expect(parser.title).to parse(input)
-      result = parser.title.parse(input)
+      expect(nama_parser.title).to parse(input)
+      result = nama_parser.title.parse(input)
       expect(result[:title].to_s.strip).to eq('test')
     end
 
     it 'can parse title with multiple spaces' do
       input = "title:  test  \n"
-      expect(parser.title).to parse(input)
-      result = parser.title.parse(input)
+      expect(nama_parser.title).to parse(input)
+      result = nama_parser.title.parse(input)
       expect(result[:title].to_s.strip).to eq('test')
     end
 
     it 'fails on malformed title' do
-      expect(parser.title).not_to parse("titleTitle\n")
-      expect(parser.title).not_to parse("title: \n")
-      expect(parser.title).not_to parse('title: test')
+      expect(nama_parser.title).not_to parse("titleTitle\n")
+      expect(nama_parser.title).not_to parse("title: \n")
+      expect(nama_parser.title).not_to parse('title: test')
     end
   end
 
   describe 'in-text elements' do
     it 'can parse references' do
       input = '${smith2010}'
-      expect(parser.ref).to parse(input)
-      result = parser.ref.parse(input)
+      expect(nama_parser.ref).to parse(input)
+      result = nama_parser.ref.parse(input)
       expect(result[:ref].to_s.strip).to eq('smith2010')
     end
   end
@@ -63,8 +64,8 @@ RSpec.describe Nanami do
       input = "text {
 				I exist!
 			}"
-      expect(parser.text_block).to parse(input)
-      result = parser.text_block.parse(input)
+      expect(nama_parser.text_block).to parse(input)
+      result = nama_parser.text_block.parse(input)
       expect(result[:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
@@ -80,7 +81,7 @@ RSpec.describe Nanami do
                           Here's an image: {assets/images/test.ff}{A test image}
                         </div>
                       })
-      result = parser.text_block.parse(input)
+      result = nama_parser.text_block.parse(input)
       print result
     end
   end
@@ -90,7 +91,7 @@ RSpec.describe Nanami do
       input = "sources {
 							    {footnotes}
 					      }"
-      expect(parser.sources).to parse(input)
+      expect(nama_parser.sources).to parse(input)
     end
   end
 
@@ -101,16 +102,16 @@ RSpec.describe Nanami do
 				  I exist!
 			  }
 		  }"
-      expect(parser.case_statement).to parse(input)
-      result = parser.case_statement.parse(input)
+      expect(nama_parser.case_statement).to parse(input)
+      result = nama_parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
       expect(result[:case_body].first[:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
     it 'can parse minified case block' do
       input = 'case(hello){text{I exist!}}'
-      expect(parser.case_statement).to parse(input)
-      result = parser.case_statement.parse(input)
+      expect(nama_parser.case_statement).to parse(input)
+      result = nama_parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
       expect(result[:case_body].first[:text].first[:plain].to_s.strip).to eq('I exist!')
     end
@@ -123,8 +124,8 @@ RSpec.describe Nanami do
           }
         }
       }"
-      expect(parser.case_statement).to parse(input)
-      result = parser.case_statement.parse(input)
+      expect(nama_parser.case_statement).to parse(input)
+      result = nama_parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
       expect(result[:case_body].first[:case_name].to_s.strip).to eq('world')
       expect(result[:case_body].first[:case_body].first[:text].first[:plain].to_s.strip).to eq('I exist!')
@@ -132,8 +133,8 @@ RSpec.describe Nanami do
 
     it 'can parse case with link' do
       input = 'case(hello)(https://example.com){text{I exist!}}'
-      expect(parser.case_statement).to parse(input)
-      result = parser.case_statement.parse(input)
+      expect(nama_parser.case_statement).to parse(input)
+      result = nama_parser.case_statement.parse(input)
       expect(result[:case_url].to_s.strip).to eq('https://example.com')
     end
 
@@ -143,7 +144,7 @@ RSpec.describe Nanami do
                     {footnotes}
                   }
                }'
-      result = parser.case_statement.parse_with_debug(input)
+      result = nama_parser.case_statement.parse_with_debug(input)
       # This will be transformed to boolean flag, for test it's fine to check existence
       expect(result[:case_body].first[:footnotes].to_s.strip).to eq('{footnotes}')
     end
@@ -158,10 +159,10 @@ RSpec.describe Nanami do
 			    }
 		    }
 	    }"
-      expect(parser.content).to parse(input)
-      result = parser.content.parse(input)
-      expect(result[:content][:case_name].to_s.strip).to eq('hello')
-      expect(result[:content][:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
+      expect(nama_parser.content).to parse(input)
+      result = nama_parser.content.parse(input)
+      expect(result[:content].first[:case_name].to_s.strip).to eq('hello')
+      expect(result[:content].first[:case_body].first[:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
     describe 'parser' do
@@ -181,14 +182,50 @@ RSpec.describe Nanami do
                          }
                      }
                  }"
-        parser.parse_with_debug input
-        expect(parser).to parse input
-        result = parser.parse input
+        nama_parser.parse_with_debug input
+        expect(nama_parser).to parse input
+        result = nama_parser.parse input
         print result
         expect(result[:title].to_s.strip).to eq('first test')
         expect(result[:content][:content].first[:case_name].to_s.strip).to eq('hello')
         expect(result[:content][:content].first[:case_body].first[:text][1][:plain].to_s.strip).to eq('I exist!')
       end
+    end
+  end
+
+  describe 'webography' do
+    it 'can parse a single source' do
+      input = '	  T: smthiread
+                  L: https://example.com/whatever.xhtml
+	                N: Something I Read
+	                D: 2019
+               '
+
+      expect(webography_parser.source).to parse input
+      result = webography_parser.source.parse input
+
+      expect(result[:title].to_s.strip).to eq('smthiread')
+      expect(result[:link].to_s.strip).to eq('https://example.com/whatever.xhtml')
+      expect(result[:name].to_s.strip).to eq('Something I Read')
+      expect(result[:date].to_s.strip).to eq('2019')
+    end
+
+    it 'can parse full webography' do
+      input = '	T: smthiread
+                L: https://example.com/whatever.xhtml
+                N: Something I Read
+                D: 2019
+
+                T: anthrthngiread
+                L: https://example.com/sowhat.xhtml
+                N: Another Thing I Read
+                D: 2020'
+      expect(webography_parser).to parse input
+      result = webography_parser.parse input
+      expect(result[:sources].first[:title].to_s.strip).to eq('smthiread')
+      expect(result[:sources].first[:link].to_s.strip).to eq('https://example.com/whatever.xhtml')
+      expect(result[:sources].first[:name].to_s.strip).to eq('Something I Read')
+      expect(result[:sources].first[:date].to_s.strip).to eq('2019')
     end
   end
 end
