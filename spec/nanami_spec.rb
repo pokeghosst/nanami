@@ -104,7 +104,7 @@ RSpec.describe Nanami do
       expect(parser.case_statement).to parse(input)
       result = parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
-      expect(result[:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
+      expect(result[:case_body].first[:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
     it 'can parse minified case block' do
@@ -112,7 +112,7 @@ RSpec.describe Nanami do
       expect(parser.case_statement).to parse(input)
       result = parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
-      expect(result[:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
+      expect(result[:case_body].first[:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
     it 'can parse recursive case blocks' do
@@ -126,8 +126,8 @@ RSpec.describe Nanami do
       expect(parser.case_statement).to parse(input)
       result = parser.case_statement.parse(input)
       expect(result[:case_name].to_s.strip).to eq('hello')
-      expect(result[:case_body][:case_name].to_s.strip).to eq('world')
-      expect(result[:case_body][:case_body][:text].first[:plain].to_s.strip).to eq('I exist!')
+      expect(result[:case_body].first[:case_name].to_s.strip).to eq('world')
+      expect(result[:case_body].first[:case_body].first[:text].first[:plain].to_s.strip).to eq('I exist!')
     end
 
     it 'can parse case with link' do

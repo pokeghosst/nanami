@@ -108,6 +108,10 @@ module Nanami
         rbrace
     end
 
+    rule(:case_content) do
+      (text_block | case_statement)
+    end
+
     rule(:case_statement) do
       str('case(') >>
         (str(')').absent? >> any).repeat(1).as(:case_name) >>
@@ -118,7 +122,7 @@ module Nanami
             str(')')
         ).maybe >>
         space? >> lbrace >> space? >>
-        (text_block | case_statement).as(:case_body) >>
+        case_content.repeat(0).as(:case_body) >>
         space? >> rbrace
     end
 
