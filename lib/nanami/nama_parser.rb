@@ -24,18 +24,15 @@ module Nanami
     rule(:space) { match('\s').repeat(1) }
     rule(:space?) { space.maybe }
     rule(:newline) { match('\n') }
-    rule(:lbrace) { str('{') }
-    rule(:rbrace) { str('}') }
 
     rule(:title) do
       str('title:') >> space? >> (newline.absent? >> any).repeat(1).as(:title) >> newline
     end
 
-    # ${ref}
     rule(:ref) do
-      str('$') >> lbrace >>
+      str('${') >>
         match['a-zA-Z0-9_'].repeat(1).as(:ref) >>
-        rbrace
+        str('}')
     end
 
     rule(:html_attribute_value) { str('"') >> (str('"').absent? >> any).repeat >> str('"') }
@@ -67,22 +64,20 @@ module Nanami
       match['a-zA-Z0-9\-._/']
     end
 
-    # {url}{text}
     rule(:link) do
-      lbrace >>
+      str('{') >>
         url_char.repeat(1).as(:url) >>
-        rbrace >> lbrace >>
-        (lbrace.absent? >> rbrace.absent? >> any).repeat(1).as(:link_text) >>
-        rbrace
+        str('}') >> str('{') >>
+        (str('{').absent? >> str('}').absent? >> any).repeat(1).as(:link_text) >>
+        str('}')
     end
 
-    # {path.ff}{description}
     rule(:image) do
-      lbrace >>
+      str('{') >>
         path_char.repeat(1).as(:img_path) >>
-        rbrace >> lbrace >>
-        (lbrace.absent? >> rbrace.absent? >> any).repeat(1).as(:img_desc) >>
-        rbrace
+        str('}') >> str('{') >>
+        (str('{').absent? >> str('}').absent? >> any).repeat(1).as(:img_desc) >>
+        str('}')
     end
 
     rule(:text_content) do
@@ -98,15 +93,15 @@ module Nanami
     end
 
     rule(:text_block) do
-      str('text') >> space? >> lbrace >> space? >>
+      str('text') >> space? >> str('{') >> space? >>
         text_content.as(:text) >>
-        space? >> rbrace
+        space? >> str('}')
     end
 
     rule(:sources) do
-      str('sources') >> space? >> lbrace >> space? >>
+      str('sources') >> space? >> str('{') >> space? >>
         (str('{footnotes}').as(:footnotes) >> space?).maybe >>
-        rbrace
+        str('}')
     end
 
     rule(:case_content) do
@@ -122,17 +117,17 @@ module Nanami
             url_char.repeat(1).as(:case_url) >>
             str(')')
         ).maybe >>
-        space? >> lbrace >> space? >>
+        space? >> str('{') >> space? >>
         case_content.repeat(1).as(:case_body) >>
-        space? >> rbrace
+        space? >> str('}')
     end
 
     rule(:nlp) { str('!nlp') }
 
     rule(:content) do
-      space? >> str('content') >> space? >> lbrace >> space? >>
-        case_statement.repeat(0).as(:content) >> space? >>
-        rbrace
+      space? >> str('content') >> space? >> str('{') >> space? >>
+        (case_statement >> space?).repeat(0).as(:content) >> space? >>
+        str('}')
     end
 
     rule(:document) do
@@ -146,17 +141,17 @@ module Nanami
 
   # Parses webography file
   class WebographyParser < Parslet::Parser
-    rule(:space)      { match('\s').repeat(1) }
-    rule(:space?)     { space.maybe }
-    rule(:newline)    { match('\n') }
+    rule(:space) { match('\s').repeat(1) }
+    rule(:space?) { space.maybe }
+    rule(:newline) { match('\n') }
     rule(:blank_line) { newline >> newline }
 
     rule(:field_value) { (newline.absent? >> any).repeat(1) }
 
-    rule(:title)  { str('T: ') >> field_value.as(:title) }
-    rule(:link)   { str('L: ') >> field_value.as(:link)  }
-    rule(:name)   { str('N: ') >> field_value.as(:name)  }
-    rule(:date)   { str('D: ') >> field_value.as(:date)  }
+    rule(:title) { str('T: ') >> field_value.as(:title) }
+    rule(:link) { str('L: ') >> field_value.as(:link) }
+    rule(:name) { str('N: ') >> field_value.as(:name) }
+    rule(:date) { str('D: ') >> field_value.as(:date) }
 
     rule(:source) do
       (space? >> title >> newline >>
