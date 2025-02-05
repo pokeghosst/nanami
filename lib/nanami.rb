@@ -18,7 +18,7 @@
 
 require_relative 'nanami/version'
 require_relative 'nanami/nama_parser'
-require_relative 'nanami/transformer'
+require_relative 'nanami/nama_transformer'
 
 module Nanami
   class Error < StandardError; end

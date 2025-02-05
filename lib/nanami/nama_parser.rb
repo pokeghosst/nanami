@@ -35,27 +35,6 @@ module Nanami
         str('}')
     end
 
-    rule(:html_attribute_value) { str('"') >> (str('"').absent? >> any).repeat >> str('"') }
-
-    rule(:html_attribute) { match['a-zA-Z'].repeat(1) >> (str('=') >> html_attribute_value).maybe }
-
-    rule(:html_tag) do
-      str('<') >>
-        str('/').maybe >>
-        match['a-zA-Z'].repeat(1).as(:tag_name) >>
-        (space >> html_attribute).repeat.as(:attributes) >>
-        space? >>
-        str('>')
-    end
-
-    rule(:self_closing_tag) do
-      str('<') >>
-        match['a-zA-Z'].repeat(1).as(:tag_name) >>
-        (space >> html_attribute).repeat.as(:attributes) >>
-        space? >>
-        str('/>')
-    end
-
     rule(:url_char) do
       match['a-zA-Z0-9\-._~:/?#\[\]@!$&\'*+,;=']
     end
@@ -85,10 +64,7 @@ module Nanami
         ref.as(:ref) |
           image.as(:img) |
           link.as(:link) |
-          self_closing_tag.as(:self_closing) |
-          html_tag.as(:html) |
-          (ref.absent? >> image.absent? >> link.absent? >>
-            html_tag.absent? >> self_closing_tag.absent? >> str('}').absent? >> any).repeat(1).as(:plain)
+          ((ref | image | link | str('}')).absent? >> any).repeat(1).as(:raw)
       ).repeat(1)
     end
 
@@ -133,7 +109,7 @@ module Nanami
     rule(:document) do
       space? >> title >>
         space? >> nlp.maybe >>
-        space? >> content.as(:content)
+        space? >> content
     end
 
     root(:document)
