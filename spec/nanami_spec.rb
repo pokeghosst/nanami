@@ -333,5 +333,37 @@ RSpec.describe Nanami do
       end
     end
   end
+
+  context 'transformers' do
+    def parse_and_transform(input)
+      nama_transformer.apply nama_parser.parse input
+    end
+
+    it 'can transform full example' do
+      parsed_document = nama_parser.parse "title: first test
+                 content {
+                     case(hello) {
+                         text {
+                             <b>I exist!</b>${smthiread}${anthrthngiread}
+                             <br/>
+                             I use {https://example.com}{example} as an example a lot.
+                             {img/someimg.ff}{A random image in the farbfeld format}
+                         }
+                         sources {
+                             {footnotes}
+                         }
+                     }
+                 }"
+      # print parsed_document
+
+      transformed_document = nama_transformer.apply parsed_document
+
+      print transformed_document
+    end
+
+    describe 'link' do
+
+    end
+  end
 end
 

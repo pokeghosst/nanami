@@ -24,6 +24,7 @@ module Nanami
     rule(:space) { match('\s').repeat(1) }
     rule(:space?) { space.maybe }
     rule(:newline) { match('\n') }
+    rule(:newline_with_indent) { newline >> match[' \t'].repeat }
 
     rule(:title) do
       str('title:') >> space? >> (newline.absent? >> any).repeat(1).as(:title) >> newline
@@ -31,7 +32,7 @@ module Nanami
 
     rule(:ref) do
       str('${') >>
-        match['a-zA-Z0-9_'].repeat(1).as(:ref) >>
+        match['a-zA-Z0-9_'].repeat(1) >>
         str('}')
     end
 
@@ -60,11 +61,9 @@ module Nanami
     end
 
     rule(:text_content) do
-      (
-        ref.as(:ref) |
-          image.as(:img) |
-          link.as(:link) |
-          ((ref | image | link | str('}')).absent? >> any).repeat(1).as(:raw)
+      (space? >>
+        ref.as(:ref) | image.as(:img) | link.as(:link) |
+        ((ref | image | link | str('}')).absent? >> any ).repeat(1).as(:raw)
       ).repeat(1)
     end
 
