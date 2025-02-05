@@ -316,7 +316,17 @@ RSpec.describe Nanami do
     end
   end
 
-  describe 'parser' do
+  describe 'document' do
+    subject { nama_parser }
+
+    it 'can parse minimal document' do
+      expect(subject).to parse "title: hello\ncontent { }"
+    end
+
+    it 'can parse document with nlp flag' do
+      expect(subject).to parse "title: hello\n!nlp\ncontent { }"
+    end
+
     it 'can parse benchmark document' do
       input = "title: first test
                  !nlp
@@ -333,49 +343,79 @@ RSpec.describe Nanami do
                          }
                      }
                  }"
-      nama_parser.parse_with_debug input
-      expect(nama_parser).to parse input
-      result = nama_parser.parse input
-      print result
-      expect(result[:title].to_s.strip).to eq('first test')
-      expect(result[:content][:content].first[:case_name].to_s.strip).to eq('hello')
-      expect(result[:content][:content].first[:case_body].first[:text][1][:plain].to_s.strip).to eq('I exist!')
+      expect(subject).to parse input
+    end
+
+    it 'can\'t parse bad document' do
+      inputs = [
+        'content { }',
+        'title: hello',
+        "!nlp\ncontent { }"
+      ]
+
+      inputs.each do |input|
+        expect(subject).not_to parse input
+      end
     end
   end
 
   describe 'webography' do
+    subject { webography_parser }
+
+    it 'can parse title' do
+      expect(subject.title).to parse 'T: lorem ipsum'
+    end
+
+    it 'can parse link' do
+      expect(subject.link).to parse 'L: https://example.com'
+    end
+
+    it 'can parse name' do
+      expect(subject.name).to parse 'N: Something I Read'
+    end
+
+    it 'can parse date' do
+      expect(subject.date).to parse 'D: 2019'
+    end
+
     it 'can parse a single source' do
-      input = '	  T: smthiread
-                  L: https://example.com/whatever.xhtml
-	                N: Something I Read
-	                D: 2019
-               '
+      expect(subject.source).to parse 'T: smthiread
+               L: https://example.com/whatever.xhtml
+	             N: Something I Read
+	             D: 2019'
+    end
 
-      expect(webography_parser.source).to parse input
-      result = webography_parser.source.parse input
+    it 'can\'t parse source with missing fields' do
+      expect(subject).not_to parse 'T: smthiread
+	             N: Something I Read
+	             D: 2019'
+    end
 
-      expect(result[:title].to_s.strip).to eq('smthiread')
-      expect(result[:link].to_s.strip).to eq('https://example.com/whatever.xhtml')
-      expect(result[:name].to_s.strip).to eq('Something I Read')
-      expect(result[:date].to_s.strip).to eq('2019')
+    it 'can\'t parse source with mixed field order' do
+      expect(subject).not_to parse 'T: smthiread
+               N: Something I Read
+               L: https://example.com/whatever.xhtml
+	             D: 2019'
+    end
+
+    it 'can\'t parse source with extra fields' do
+      expect(subject).not_to parse 'T: smthiread
+               L: https://example.com/whatever.xhtml
+	             N: Something I Read
+	             D: 2019
+               E: who are you'
     end
 
     it 'can parse full webography' do
-      input = '	T: smthiread
-                L: https://example.com/whatever.xhtml
-                N: Something I Read
-                D: 2019
+      expect(subject).to parse 'T: smthiread
+               L: https://example.com/whatever.xhtml
+               N: Something I Read
+               D: 2019
 
-                T: anthrthngiread
-                L: https://example.com/sowhat.xhtml
-                N: Another Thing I Read
-                D: 2020'
-      expect(webography_parser).to parse input
-      result = webography_parser.parse input
-      expect(result[:sources].first[:title].to_s.strip).to eq('smthiread')
-      expect(result[:sources].first[:link].to_s.strip).to eq('https://example.com/whatever.xhtml')
-      expect(result[:sources].first[:name].to_s.strip).to eq('Something I Read')
-      expect(result[:sources].first[:date].to_s.strip).to eq('2019')
+               T: anthrthngiread
+               L: https://example.com/sowhat.xhtml
+               N: Another Thing I Read
+               D: 2020'
     end
   end
 end
