@@ -354,7 +354,6 @@ RSpec.describe Nanami do
                          }
                      }
                  }"
-      # print parsed_document
 
       transformed_document = nama_transformer.apply parsed_document
 
