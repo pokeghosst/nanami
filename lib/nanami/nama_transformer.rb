@@ -17,6 +17,8 @@
 # frozen_string_literal: true
 
 require 'parslet'
+require 'htmlbeautifier'
+
 module Nanami
   # Transforms atoms, making them ready for render
   class NamaTransformer < Parslet::Transform
@@ -69,9 +71,13 @@ module Nanami
     end
 
     rule(title: simple(:title), content: sequence(:cases)) do
-      format(HTML5_TEMPLATE,
-             title: title,
-             content: "<div class=\"content\">#{cases.join ''}</div>")
+      html = format(HTML5_TEMPLATE,
+                    title: title,
+                    content: "<div class=\"content\">#{cases.join ''}</div>")
+
+      # This is ugly and perhaps even unholy, but so convenient.
+      # Will be revised in the future when I have more time to do things "right".
+      HtmlBeautifier.beautify(html)
     end
 
     # # TODO: Don't forget to handle nlp

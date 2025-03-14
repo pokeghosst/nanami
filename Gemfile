@@ -12,3 +12,5 @@ gem 'rspec', '~> 3.0'
 gem 'standard', '~> 1.3'
 
 gem 'parslet', '~> 2.0'
+
+gem 'htmlbeautifier', '~> 1.4', '>= 1.4.3'
